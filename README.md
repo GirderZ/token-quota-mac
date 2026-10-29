@@ -7,7 +7,7 @@
 
 在菜单栏和悬浮卡片中，查看 Codex 接口返回的剩余额度、重置时间与重置机会。
 
-[下载最新版](https://github.com/GirderDog/token-quota-mac/releases/latest) · [让 Agent 帮你安装](docs/AGENT_INSTALL.md) · [反馈问题](https://github.com/GirderDog/token-quota-mac/issues)
+[下载最新版](https://github.com/GirderZ/token-quota-mac/releases/latest) · [让 Agent 帮你安装](docs/AGENT_INSTALL.md) · [反馈问题](https://github.com/GirderZ/token-quota-mac/issues)
 </div>
 
 ## 它能做什么
@@ -47,7 +47,7 @@
 将下面这段话交给能操作本机的 Agent：
 
 ```text
-请帮我安装 https://github.com/GirderDog/token-quota-mac 。
+请帮我安装 https://github.com/GirderZ/token-quota-mac 。
 先阅读 README 和 docs/AGENT_INSTALL.md，检查我的 Mac 是否满足要求，
 查看 install.sh 后执行安装。完成后告诉我版本和安装位置。
 如果缺少 Codex 登录态或 macOS 要求首次打开确认，请让我手动完成。
@@ -58,7 +58,7 @@ Agent 会下载安装包、校验 SHA-256 和应用包，再安装到 `~/Applica
 也可以在终端自行执行：
 
 ```bash
-curl -fL --connect-timeout 15 --max-time 60 https://github.com/GirderDog/token-quota-mac/releases/latest/download/install.sh -o /tmp/token-quota-install.sh && bash /tmp/token-quota-install.sh
+curl -fL --connect-timeout 15 --max-time 60 https://github.com/GirderZ/token-quota-mac/releases/latest/download/install.sh -o /tmp/token-quota-install.sh && bash /tmp/token-quota-install.sh
 ```
 
 脚本支持指定版本、安装位置和不立即打开：
@@ -72,7 +72,7 @@ bash /tmp/token-quota-install.sh --destination "$HOME/Applications/Token额度.a
 
 ## 手动安装
 
-1. 在 [Releases](https://github.com/GirderDog/token-quota-mac/releases/latest) 下载 `TokenQuotaMac-v版本号-arm64.zip`。
+1. 在 [Releases](https://github.com/GirderZ/token-quota-mac/releases/latest) 下载 `TokenQuotaMac-v版本号-arm64.zip`。
 2. 解压，将 `Token额度.app` 放到固定位置，例如用户的 Applications 文件夹。
 3. 打开应用，在菜单栏或悬浮胶囊中查看额度。
 
@@ -109,7 +109,7 @@ bash /tmp/token-quota-install.sh --destination "$HOME/Applications/Token额度.a
 
 ```bash
 xcode-select --install
-git clone https://github.com/GirderDog/token-quota-mac.git
+git clone https://github.com/GirderZ/token-quota-mac.git
 cd token-quota-mac
 ./build.sh
 ```

@@ -58,7 +58,7 @@ Agent 会下载安装包、校验 SHA-256 和应用包，再安装到 `~/Applica
 也可以在终端自行执行：
 
 ```bash
-curl -fL --connect-timeout 15 --max-time 60 https://raw.githubusercontent.com/GirderDog/token-quota-mac/main/install.sh -o /tmp/token-quota-install.sh && bash /tmp/token-quota-install.sh
+curl -fL --connect-timeout 15 --max-time 60 https://github.com/GirderDog/token-quota-mac/releases/latest/download/install.sh -o /tmp/token-quota-install.sh && bash /tmp/token-quota-install.sh
 ```
 
 脚本支持指定版本、安装位置和不立即打开：

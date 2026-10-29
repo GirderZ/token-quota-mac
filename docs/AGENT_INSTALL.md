@@ -12,7 +12,7 @@
 ## 执行
 
 ```bash
-curl -fL --connect-timeout 15 --max-time 60 https://raw.githubusercontent.com/GirderDog/token-quota-mac/main/install.sh -o /tmp/token-quota-install.sh
+curl -fL --connect-timeout 15 --max-time 60 https://github.com/GirderDog/token-quota-mac/releases/latest/download/install.sh -o /tmp/token-quota-install.sh
 # 查看脚本后再执行
 bash /tmp/token-quota-install.sh
 ```

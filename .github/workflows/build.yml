@@ -1,0 +1,23 @@
+name: 构建与检查
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  build:
+    runs-on: macos-15
+    steps:
+      - uses: actions/checkout@v4
+      - name: 检查安装脚本语法
+        run: bash -n install.sh
+      - name: 构建、签名与功能检查
+        run: ./build.sh
+      - name: 生成安装包与校验值
+        run: ./Tools/package-release.sh
+      - uses: actions/upload-artifact@v4
+        with:
+          name: TokenQuotaMac-arm64
+          path: dist/

@@ -1,0 +1,11 @@
+.DS_Store
+*.app/
+*.zip
+/dist/
+/work/
+/Design/
+/验证记录.md
+.env
+.env.*
+!.env.example
+*.log

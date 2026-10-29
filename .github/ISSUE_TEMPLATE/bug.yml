@@ -1,0 +1,16 @@
+name: 问题反馈
+description: 报告安装、界面或额度同步问题
+body:
+  - type: input
+    id: version
+    attributes:
+      label: 应用版本和 macOS 版本
+    validations:
+      required: true
+  - type: textarea
+    id: problem
+    attributes:
+      label: 发生了什么
+      description: 请描述操作步骤、预期表现和实际表现。不要粘贴令牌、auth.json、账号邮箱或原始协议日志。
+    validations:
+      required: true

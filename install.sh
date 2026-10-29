@@ -1,6 +1,6 @@
 #!/bin/bash
 set -euo pipefail
-repo="GirderDog/token-quota-mac"
+repo="GirderZ/token-quota-mac"
 destination="${HOME}/Applications/Token额度.app"
 requested_version=""
 open_after=1

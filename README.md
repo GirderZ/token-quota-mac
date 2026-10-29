@@ -58,7 +58,7 @@ Agent 会下载安装包、校验 SHA-256 和应用包，再安装到 `~/Applica
 也可以在终端自行执行：
 
 ```bash
-curl -fL https://raw.githubusercontent.com/GirderDog/token-quota-mac/main/install.sh -o /tmp/token-quota-install.sh && bash /tmp/token-quota-install.sh
+curl -fL --connect-timeout 15 --max-time 60 https://raw.githubusercontent.com/GirderDog/token-quota-mac/main/install.sh -o /tmp/token-quota-install.sh && bash /tmp/token-quota-install.sh
 ```
 
 脚本支持指定版本、安装位置和不立即打开：
@@ -143,3 +143,5 @@ cd token-quota-mac
 本项目采用 [MIT 许可](LICENSE)。灵感与额度协议参考 [returnk/codex-usage-badge](https://github.com/returnk/codex-usage-badge)，其 MIT 声明保存在 [THIRD_PARTY_LICENSE.txt](THIRD_PARTY_LICENSE.txt)。这是独立的 Swift / AppKit / SwiftUI 原生实现。
 
 相关资料：[App Server 文档](https://learn.chatgpt.com/docs/app-server) · [重置机会说明](https://help.openai.com/en/articles/20001498-how-resets-work-in-codex)
+
+网络访问失败时，先确认终端可以访问 GitHub。若电脑已配置代理，可给安装进程设置对应的 `HTTPS_PROXY`；不需要修改全局代理或关闭安全设置。Agent 应沿用用户已有的网络设置。

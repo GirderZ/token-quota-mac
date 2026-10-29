@@ -12,7 +12,7 @@
 ## 执行
 
 ```bash
-curl -fL https://raw.githubusercontent.com/GirderDog/token-quota-mac/main/install.sh -o /tmp/token-quota-install.sh
+curl -fL --connect-timeout 15 --max-time 60 https://raw.githubusercontent.com/GirderDog/token-quota-mac/main/install.sh -o /tmp/token-quota-install.sh
 # 查看脚本后再执行
 bash /tmp/token-quota-install.sh
 ```
@@ -32,3 +32,5 @@ bash /tmp/token-quota-install.sh
 - 用户授权启动后确认菜单栏或悬浮胶囊出现。首次同步可能需要等待。
 - 最后报告实际版本、安装位置、是否已启动，以及是否仍需用户处理系统确认或登录。
 - 下载、校验或启动失败时说明具体原因，不把“已下载”说成“安装运行成功”。
+
+网络访问失败时，先确认终端可以访问 GitHub。若电脑已配置代理，可给安装进程设置对应的 `HTTPS_PROXY`；不需要修改全局代理或关闭安全设置。Agent 应沿用用户已有的网络设置。

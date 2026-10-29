@@ -22,7 +22,7 @@ major=$(/usr/bin/sw_vers -productVersion | /usr/bin/cut -d. -f1)
 case "$destination" in /*.app) ;; *) echo '安装路径必须是以 .app 结尾的绝对路径。' >&2; exit 2 ;; esac
 scratch=$(mktemp -d "${TMPDIR:-/tmp}/token-quota-install.XXXXXX")
 trap 'rm -rf "$scratch"' EXIT
-fetch() { /usr/bin/curl --fail --silent --show-error --location --proto '=https' --tlsv1.2 "$1" -o "$2"; }
+fetch() { /usr/bin/curl --fail --silent --show-error --location --connect-timeout 15 --max-time 180 --retry 1 --proto '=https' --tlsv1.2 "$1" -o "$2"; }
 if [ -z "$requested_version" ]; then
   fetch "https://api.github.com/repos/${repo}/releases/latest" "$scratch/latest.json"
   tag=$(/usr/bin/plutil -extract tag_name raw -o - "$scratch/latest.json")

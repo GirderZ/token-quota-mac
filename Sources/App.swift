@@ -406,7 +406,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         capsule = makePanel(size: NSSize(width: 126, height: 42))
         let host = CapsuleHost(rootView: CapsuleView(model: model)); host.controller = self
         capsule.contentView = host
-        details = makePanel(size: NSSize(width: 342, height: 390))
+        details = makePanel(size: NSSize(width: 342, height: 390), followsActiveSpace: true)
         detailHost = DetailHost(rootView: DetailView(model: model, delegate: self)); detailHost.controller = self
         details.contentView = detailHost
         if let saved = UserDefaults.standard.string(forKey: "position") {
@@ -425,6 +425,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         }
         NotificationCenter.default.addObserver(self, selector: #selector(activated), name: NSApplication.didBecomeActiveNotification, object: nil)
         NSWorkspace.shared.notificationCenter.addObserver(self, selector: #selector(wake), name: NSWorkspace.didWakeNotification, object: nil)
+        NSWorkspace.shared.notificationCenter.addObserver(self, selector: #selector(activeSpaceChanged), name: NSWorkspace.activeSpaceDidChangeNotification, object: nil)
         NotificationCenter.default.addObserver(self, selector: #selector(screenChanged), name: NSApplication.didChangeScreenParametersNotification, object: nil)
         eventMonitor = NSEvent.addGlobalMonitorForEvents(matching: [.leftMouseDown, .rightMouseDown]) { [weak self] _ in
             guard let self else { return }
@@ -434,11 +435,14 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
             if event.keyCode == 53 { self?.hideDetails(); return nil }; return event
         }
     }
-    func makePanel(size: NSSize) -> FloatingPanel {
+    func makePanel(size: NSSize, followsActiveSpace: Bool = false) -> FloatingPanel {
         let panel = FloatingPanel(contentRect: NSRect(origin: .zero, size: size), styleMask: [.borderless, .nonactivatingPanel], backing: .buffered, defer: false)
         panel.isOpaque = false; panel.backgroundColor = .clear; panel.hasShadow = true
         panel.hidesOnDeactivate = false; panel.isReleasedWhenClosed = false
-        panel.collectionBehavior = [.canJoinAllSpaces, .fullScreenAuxiliary]
+        // 胶囊常驻各桌面；详情只在用户当前操作的桌面展开。
+        panel.collectionBehavior = followsActiveSpace
+            ? [.moveToActiveSpace, .fullScreenAuxiliary]
+            : [.canJoinAllSpaces, .fullScreenAuxiliary]
         panel.level = .floating
         return panel
     }
@@ -490,16 +494,20 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         guard let button = statusItem.button, let window = button.window else { return capsule.frame }
         return window.convertToScreen(button.convert(button.bounds, to: nil))
     }
+    var detailsVisibleOnCurrentSpace: Bool { details.isVisible && details.isOnActiveSpace }
     func showDetails(fromMenu: Bool, hold: Bool) {
         model.refreshLoginStatus()
         cancelHide(); detailsFromMenu = fromMenu; holdDetails = hold
-        resizeDetails(); positionDetails(); details.orderFrontRegardless()
-        if hold { details.makeKey() }
+        // isVisible 可能包含留在其他桌面的窗口，先收起再在当前桌面展开。
+        if details.isVisible && !details.isOnActiveSpace { details.orderOut(nil) }
+        resizeDetails(); positionDetails()
+        if hold { details.makeKeyAndOrderFront(nil) }
+        else { details.orderFrontRegardless() }
         if model.snapshot == nil || model.stale { model.refresh() }
     }
     func hoverCapsule() { if !holdDetails { showDetails(fromMenu: false, hold: false) } }
     func toggleDetailsFromCapsule() {
-        if details.isVisible && holdDetails && !detailsFromMenu { hideDetails() }
+        if detailsVisibleOnCurrentSpace && holdDetails && !detailsFromMenu { hideDetails() }
         else { showDetails(fromMenu: false, hold: true) }
     }
     func hideDetails() { cancelHide(); holdDetails = false; details.orderOut(nil) }
@@ -535,7 +543,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     @objc func statusClicked() {
         if NSApp.currentEvent?.type == .rightMouseUp {
             statusItem.menu = contextMenu(); statusItem.button?.performClick(nil); statusItem.menu = nil
-        } else if details.isVisible && detailsFromMenu { hideDetails() }
+        } else if detailsVisibleOnCurrentSpace && detailsFromMenu { hideDetails() }
         else { showDetails(fromMenu: true, hold: true) }
     }
     func contextMenu() -> NSMenu {
@@ -580,7 +588,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     @objc func activated() { model.refreshLoginStatus() }
     @objc func showAbout() {
         let alert = NSAlert(); alert.messageText = "Token额度 · Codex Badge for Mac"
-        alert.informativeText = "1.5.1 · 原生 macOS 版本\n\n灵感与协议参考：returnk/codex-usage-badge（MIT）\nhttps://github.com/returnk/codex-usage-badge\n\n通过本机 Codex CLI 只读获取额度，每 60 秒同步。\n不发送模型请求，不收集登录凭据。\n第三方工具，非 OpenAI 官方产品。"
+        alert.informativeText = "1.5.2 · 原生 macOS 版本\n\n灵感与协议参考：returnk/codex-usage-badge（MIT）\nhttps://github.com/returnk/codex-usage-badge\n\n通过本机 Codex CLI 只读获取额度，每 60 秒同步。\n不发送模型请求，不收集登录凭据。\n第三方工具，非 OpenAI 官方产品。"
         alert.runModal()
     }
     @objc func openHost() {
@@ -588,6 +596,10 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         if let path = ["/Applications/Codex.app", "/Applications/ChatGPT.app"].first(where: { fm.fileExists(atPath: $0) }) {
             NSWorkspace.shared.openApplication(at: URL(fileURLWithPath: path), configuration: NSWorkspace.OpenConfiguration())
         }
+    }
+    @objc func activeSpaceChanged() {
+        // 桌面切换后释放旧卡片的点击／悬停状态，下一次点击始终重新展开。
+        hideDetails()
     }
     @objc func wake() { model.refresh() }
     @objc func screenChanged() { clampPosition(); if details.isVisible { positionDetails() } }

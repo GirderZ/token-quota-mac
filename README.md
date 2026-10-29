@@ -13,6 +13,7 @@
 ## 它能做什么
 
 - 菜单栏百分比常驻，悬浮胶囊可拖动、记住位置。
+- 支持多桌面：在哪个桌面点击，就在哪个桌面展开详情卡片。
 - 展示接口返回的 5 小时、本周等额度窗口与重置时间。
 - 剩余额度 ≤10% 红色，11–40% 黄色，>40% 绿色；状态栏数字保持系统颜色。
 - 每 60 秒同步，也可手动刷新，底部显示距离上次成功同步的分钟数。
@@ -64,7 +65,7 @@ curl -fL --connect-timeout 15 --max-time 60 https://github.com/GirderZ/token-quo
 脚本支持指定版本、安装位置和不立即打开：
 
 ```bash
-bash /tmp/token-quota-install.sh --version v1.5.1 --no-open
+bash /tmp/token-quota-install.sh --version v1.5.2 --no-open
 bash /tmp/token-quota-install.sh --destination "$HOME/Applications/Token额度.app"
 ```
 

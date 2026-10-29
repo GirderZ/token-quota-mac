@@ -67,6 +67,6 @@ if ! /usr/bin/ditto "$app" "$destination"; then
   if [ -d "$previous" ]; then mv "$previous" "$destination"; fi
   echo '安装失败，已恢复旧版。' >&2; exit 1
 fi
-echo "安装完成：$destination（${tag}）"
+echo "安装完成：${destination}（${tag}）"
 echo '请确认 Codex CLI 或包含 CLI 的桌面应用已登录；首次打开可能需要 macOS 手动确认。'
 [ "$open_after" -eq 0 ] || /usr/bin/open "$destination"

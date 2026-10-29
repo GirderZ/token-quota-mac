@@ -4,7 +4,7 @@
 
 ## 安装前
 
-1. 阅读仓库 README 与 `install.sh`，确认来源为 `GirderDog/token-quota-mac`。
+1. 阅读仓库 README 与 `install.sh`，确认来源为 `GirderZ/token-quota-mac`。
 2. 检查 macOS ≥13、Apple 芯片；其他系统不要尝试运行 arm64 安装包。
 3. 确认用户希望安装。默认目录为 `~/Applications/Token额度.app`，无需管理员权限。
 4. 检查是否有可用 Codex CLI 或桌面应用；如果未登录，由用户在官方应用中完成登录，不读取或索取令牌。
@@ -12,7 +12,7 @@
 ## 执行
 
 ```bash
-curl -fL --connect-timeout 15 --max-time 60 https://github.com/GirderDog/token-quota-mac/releases/latest/download/install.sh -o /tmp/token-quota-install.sh
+curl -fL --connect-timeout 15 --max-time 60 https://github.com/GirderZ/token-quota-mac/releases/latest/download/install.sh -o /tmp/token-quota-install.sh
 # 查看脚本后再执行
 bash /tmp/token-quota-install.sh
 ```

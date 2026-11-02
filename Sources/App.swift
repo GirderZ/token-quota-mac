@@ -79,6 +79,7 @@ final class BadgeModel: ObservableObject {
     @Published var error: String?
     @Published var loading = false
     @Published var now = Date()
+    @Published var nextAutoSyncAt: Date?
     @Published var pinned = UserDefaults.standard.object(forKey: "pinned") as? Bool ?? true
     @Published var theme = UserDefaults.standard.string(forKey: "theme") ?? "system"
     @Published var floating = UserDefaults.standard.object(forKey: "floating") as? Bool ?? true
@@ -297,9 +298,8 @@ struct DetailView: View {
                         Label("刷新", systemImage: "arrow.clockwise").font(.system(size: 10, weight: .medium)).foregroundStyle(Palette.secondary)
                     }.buttonStyle(.plain).disabled(model.loading).keyboardShortcut("r")
                 }
-                Text(QuotaDates.lastSync(model.snapshot?.fetchedAt, relativeTo: model.now))
-                    .font(.system(size: 10)).monospacedDigit()
-                    .fixedSize(horizontal: false, vertical: true)
+                SyncTimingView(lastSyncAt: model.snapshot?.fetchedAt,
+                               nextSyncAt: model.nextAutoSyncAt, loading: model.loading)
             }.foregroundStyle(Palette.secondary)
         }
         .foregroundStyle(Palette.ink)
@@ -308,6 +308,25 @@ struct DetailView: View {
         .background(PanelBackground())
         .clipShape(RoundedRectangle(cornerRadius: 20))
         .overlay(RoundedRectangle(cornerRadius: 20).stroke(Palette.border.opacity(0.8), lineWidth: 1))
+    }
+}
+
+// 只让底部时间每秒更新，避免每秒重绘菜单栏图标或重新定位卡片。
+struct SyncTimingView: View {
+    let lastSyncAt: Date?
+    let nextSyncAt: Date?
+    let loading: Bool
+    var body: some View {
+        TimelineView(.periodic(from: .now, by: 1)) { context in
+            HStack(alignment: .firstTextBaseline, spacing: 8) {
+                Text(QuotaDates.lastSync(lastSyncAt, relativeTo: context.date))
+                    .fixedSize(horizontal: false, vertical: true)
+                Spacer(minLength: 0)
+                Text(QuotaDates.nextSync(nextSyncAt, relativeTo: context.date, loading: loading))
+                    .fixedSize(horizontal: true, vertical: false)
+            }
+            .font(.system(size: 10)).monospacedDigit()
+        }
     }
 }
 
@@ -419,7 +438,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         if CommandLine.arguments.contains("--show-details") {
             DispatchQueue.main.async { self.showDetails(fromMenu: false, hold: true) }
         }
-        timer = Timer.scheduledTimer(withTimeInterval: 60, repeats: true) { [weak self] _ in self?.model.refresh() }
+        scheduleAutoRefresh()
         tick = Timer.scheduledTimer(withTimeInterval: 5, repeats: true) { [weak self] _ in
             self?.model.now = Date(); self?.model.refreshLoginStatus(); self?.update()
         }
@@ -434,6 +453,19 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         localMonitor = NSEvent.addLocalMonitorForEvents(matching: .keyDown) { [weak self] event in
             if event.keyCode == 53 { self?.hideDetails(); return nil }; return event
         }
+    }
+    func scheduleAutoRefresh() {
+        timer?.invalidate()
+        let deadline = Date().addingTimeInterval(60)
+        model.nextAutoSyncAt = deadline
+        let refreshTimer = Timer(fire: deadline, interval: 0, repeats: false) { [weak self] _ in
+            guard let self else { return }
+            self.scheduleAutoRefresh()
+            self.model.refresh()
+        }
+        timer = refreshTimer
+        // 菜单打开或拖动时也按计划同步，倒计时与实际定时器共用同一截止时间。
+        RunLoop.main.add(refreshTimer, forMode: .common)
     }
     func makePanel(size: NSSize, followsActiveSpace: Bool = false) -> FloatingPanel {
         let panel = FloatingPanel(contentRect: NSRect(origin: .zero, size: size), styleMask: [.borderless, .nonactivatingPanel], backing: .buffered, defer: false)
@@ -588,7 +620,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     @objc func activated() { model.refreshLoginStatus() }
     @objc func showAbout() {
         let alert = NSAlert(); alert.messageText = "Token额度 · Codex Badge for Mac"
-        alert.informativeText = "1.5.2 · 原生 macOS 版本\n\n灵感与协议参考：returnk/codex-usage-badge（MIT）\nhttps://github.com/returnk/codex-usage-badge\n\n通过本机 Codex CLI 只读获取额度，每 60 秒同步。\n不发送模型请求，不收集登录凭据。\n第三方工具，非 OpenAI 官方产品。"
+        alert.informativeText = "1.5.3 · 原生 macOS 版本\n\n灵感与协议参考：returnk/codex-usage-badge（MIT）\nhttps://github.com/returnk/codex-usage-badge\n\n通过本机 Codex CLI 只读获取额度，每 60 秒同步。\n不发送模型请求，不收集登录凭据。\n第三方工具，非 OpenAI 官方产品。"
         alert.runModal()
     }
     @objc func openHost() {
@@ -601,7 +633,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         // 桌面切换后释放旧卡片的点击／悬停状态，下一次点击始终重新展开。
         hideDetails()
     }
-    @objc func wake() { model.refresh() }
+    @objc func wake() { scheduleAutoRefresh(); model.refresh() }
     @objc func screenChanged() { clampPosition(); if details.isVisible { positionDetails() } }
     @objc func refreshAction() { model.refresh() }
     @objc func detailAction() { showDetails(fromMenu: true, hold: true) }

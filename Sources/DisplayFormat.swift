@@ -27,7 +27,13 @@ enum QuotaDates {
     }
     static func lastSync(_ date: Date?, relativeTo now: Date) -> String {
         guard let date else { return "上次同步：暂无" }
-        let minutes = max(0, Int(now.timeIntervalSince(date) / 60))
-        return "上次同步：\(minutes)分钟前"
+        let seconds = max(0, Int(now.timeIntervalSince(date)))
+        return "上次同步：\(seconds)秒前"
+    }
+    static func nextSync(_ date: Date?, relativeTo now: Date, loading: Bool) -> String {
+        if loading { return "正在同步…" }
+        guard let date else { return "等待同步" }
+        let seconds = max(0, Int(ceil(date.timeIntervalSince(now))))
+        return seconds > 0 ? "下次同步：\(seconds)秒后" : "即将同步…"
     }
 }

@@ -16,7 +16,7 @@
 - 支持多桌面：在哪个桌面点击，就在哪个桌面展开详情卡片。
 - 展示接口返回的 5 小时、本周等额度窗口与重置时间。
 - 剩余额度 ≤10% 红色，11–40% 黄色，>40% 绿色；状态栏数字保持系统颜色。
-- 每 60 秒同步，也可手动刷新，底部逐秒显示「上次同步：X秒前」和下一次自动同步倒计时。
+- 每 60 秒同步，也可手动刷新，底部单行显示「X秒前同步」，每秒更新，支持「立即刷新」。
 - 支持浅色、深色、跟随系统、置顶、登录启动。
 - 显示可用重置机会和接口提供的到期时间，**只查看，不自动使用重置机会**。
 - 读取实际套餐，显示简短常见类型；复杂或未知类型隐藏，不误标成 PLUS。
@@ -65,7 +65,7 @@ curl -fL --connect-timeout 15 --max-time 60 https://github.com/GirderZ/token-quo
 脚本支持指定版本、安装位置和不立即打开：
 
 ```bash
-bash /tmp/token-quota-install.sh --version v1.5.3 --no-open
+bash /tmp/token-quota-install.sh --version v1.5.4 --no-open
 bash /tmp/token-quota-install.sh --destination "$HOME/Applications/Token额度.app"
 ```
 

@@ -79,7 +79,6 @@ final class BadgeModel: ObservableObject {
     @Published var error: String?
     @Published var loading = false
     @Published var now = Date()
-    @Published var nextAutoSyncAt: Date?
     @Published var pinned = UserDefaults.standard.object(forKey: "pinned") as? Bool ?? true
     @Published var theme = UserDefaults.standard.string(forKey: "theme") ?? "system"
     @Published var floating = UserDefaults.standard.object(forKey: "floating") as? Bool ?? true
@@ -89,11 +88,12 @@ final class BadgeModel: ObservableObject {
     var onUpdate: (() -> Void)?
     var stale: Bool { error != nil || (snapshot.map { now.timeIntervalSince($0.fetchedAt) > 180 } ?? true) }
     var displayMain: QuotaWindow? { snapshot?.main }
-    var status: String {
+    var status: String { status(at: now) }
+    func status(at date: Date) -> String {
         if loading { return "正在同步" }
         if snapshot == nil { return "等待连接" }
         if stale { return "旧读数 · 待同步" }
-        return "已同步"
+        return QuotaDates.syncedAgo(snapshot?.fetchedAt, relativeTo: date)
     }
     func refresh() {
         guard !loading else { return }
@@ -289,18 +289,7 @@ struct DetailView: View {
                 }.font(.system(size: 10)).foregroundStyle(Palette.secondary)
             }
             Divider().opacity(0.5)
-            VStack(alignment: .leading, spacing: 7) {
-                HStack(spacing: 5) {
-                    Circle().fill(model.loading ? Palette.secondary : model.stale ? Palette.warning : Palette.success).frame(width: 5, height: 5)
-                    Text(model.status).font(.system(size: 10)).foregroundStyle(model.loading ? Palette.secondary : model.stale ? Palette.warning : Palette.success)
-                    Spacer()
-                    Button { model.refresh() } label: {
-                        Label("刷新", systemImage: "arrow.clockwise").font(.system(size: 10, weight: .medium)).foregroundStyle(Palette.secondary)
-                    }.buttonStyle(.plain).disabled(model.loading).keyboardShortcut("r")
-                }
-                SyncTimingView(lastSyncAt: model.snapshot?.fetchedAt,
-                               nextSyncAt: model.nextAutoSyncAt, loading: model.loading)
-            }.foregroundStyle(Palette.secondary)
+            SyncStatusView(model: model)
         }
         .foregroundStyle(Palette.ink)
         .tint(Palette.active)
@@ -311,22 +300,25 @@ struct DetailView: View {
     }
 }
 
-// 只让底部时间每秒更新，避免每秒重绘菜单栏图标或重新定位卡片。
-struct SyncTimingView: View {
-    let lastSyncAt: Date?
-    let nextSyncAt: Date?
-    let loading: Bool
+// 每秒只更新底部这一行，沿用原来的同步状态颜色。
+struct SyncStatusView: View {
+    @ObservedObject var model: BadgeModel
     var body: some View {
         TimelineView(.periodic(from: .now, by: 1)) { context in
-            HStack(alignment: .firstTextBaseline, spacing: 8) {
-                Text(QuotaDates.lastSync(lastSyncAt, relativeTo: context.date))
-                    .fixedSize(horizontal: false, vertical: true)
-                Spacer(minLength: 0)
-                Text(QuotaDates.nextSync(nextSyncAt, relativeTo: context.date, loading: loading))
-                    .fixedSize(horizontal: true, vertical: false)
+            HStack(spacing: 5) {
+                Circle().fill(statusColor).frame(width: 5, height: 5)
+                Text(model.status(at: context.date))
+                    .font(.system(size: 10)).monospacedDigit().foregroundStyle(statusColor)
+                Spacer()
+                Button { model.refresh() } label: {
+                    Label("立即刷新", systemImage: "arrow.clockwise")
+                        .font(.system(size: 10, weight: .medium)).foregroundStyle(Palette.secondary)
+                }.buttonStyle(.plain).disabled(model.loading).keyboardShortcut("r")
             }
-            .font(.system(size: 10)).monospacedDigit()
         }
+    }
+    private var statusColor: Color {
+        model.loading ? Palette.secondary : model.stale ? Palette.warning : Palette.success
     }
 }
 
@@ -457,14 +449,13 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     func scheduleAutoRefresh() {
         timer?.invalidate()
         let deadline = Date().addingTimeInterval(60)
-        model.nextAutoSyncAt = deadline
         let refreshTimer = Timer(fire: deadline, interval: 0, repeats: false) { [weak self] _ in
             guard let self else { return }
             self.scheduleAutoRefresh()
             self.model.refresh()
         }
         timer = refreshTimer
-        // 菜单打开或拖动时也按计划同步，倒计时与实际定时器共用同一截止时间。
+        // 菜单打开或拖动时也按计划同步。
         RunLoop.main.add(refreshTimer, forMode: .common)
     }
     func makePanel(size: NSSize, followsActiveSpace: Bool = false) -> FloatingPanel {
@@ -620,7 +611,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     @objc func activated() { model.refreshLoginStatus() }
     @objc func showAbout() {
         let alert = NSAlert(); alert.messageText = "Token额度 · Codex Badge for Mac"
-        alert.informativeText = "1.5.3 · 原生 macOS 版本\n\n灵感与协议参考：returnk/codex-usage-badge（MIT）\nhttps://github.com/returnk/codex-usage-badge\n\n通过本机 Codex CLI 只读获取额度，每 60 秒同步。\n不发送模型请求，不收集登录凭据。\n第三方工具，非 OpenAI 官方产品。"
+        alert.informativeText = "1.5.4 · 原生 macOS 版本\n\n灵感与协议参考：returnk/codex-usage-badge（MIT）\nhttps://github.com/returnk/codex-usage-badge\n\n通过本机 Codex CLI 只读获取额度，每 60 秒同步。\n不发送模型请求，不收集登录凭据。\n第三方工具，非 OpenAI 官方产品。"
         alert.runModal()
     }
     @objc func openHost() {
